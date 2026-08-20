@@ -21,6 +21,8 @@ Requisitos: **Python 3.11** e uma GPU NVIDIA com **CUDA 12.8** (as dependências
 
 ## Adaptador LoRA treinado
 
+O adaptador foi gerado pelo notebook [`notebooks/Techchallenge3_executado_final.ipynb`](notebooks/Techchallenge3_executado_final.ipynb), executado no **Google Colab**. O notebook carrega o modelo base `unsloth/llama-3-8b-Instruct-bnb-4bit` em 4-bit via Unsloth, treina um adaptador LoRA (r=16, alpha=16, módulos de atenção e MLP) sobre o dataset `mukulb/clustered_MEDQUAD_dataset_with_groups` usando `trl.SFTTrainer`, e salva o resultado no Google Drive em `/content/drive/MyDrive/TechChallenge3/adaptador_medquad_lora_final`. Esse diretório foi então compactado e disponibilizado para download abaixo — é o mesmo artifact esperado por `src/inferencia.py`.
+
 Download do adaptador LoRA/QLoRA:
 
 [Baixar adaptador_medquad_lora_final.zip](https://drive.google.com/file/d/1Zf67WsQ4_4UAsq93_5KPJmTLr8y8qx1L/view?usp=sharing)
