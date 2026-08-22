@@ -1,0 +1,51 @@
+{
+  "gerado_em": "2026-08-22",
+  "corpus": {
+    "versao": "medquad-pool-v1",
+    "atualizado_em": "2026-08-22",
+    "dataset_upstream": "mukulb/clustered_MEDQUAD_dataset_with_groups",
+    "medquad_original": "https://github.com/abachaa/MedQuAD",
+    "fontes": {
+      "medquad_pool": {
+        "arquivo": "data/medquad_rag_pool.jsonl",
+        "checksum_sha256": "ad9133ea6d4873fa645c4f981c54892fad5cdcdc118e8fb52dd0b7d4b83e5890",
+        "bytes": 39313866,
+        "linhas_lidas": 15272,
+        "documentos_aceitos": 15176,
+        "descartes": {
+          "resposta com menos de 40 chars": 49,
+          "duplicata exata (mesma pergunta e mesma resposta)": 47
+        },
+        "observacao": "Somente linhas NÃO usadas no fine-tuning do Integrante 1. Ver data/README.md para o critério de exclusão (por texto da pergunta, não só por índice)."
+      },
+      "prontuarios_sinteticos": {
+        "arquivo": "data/prontuarios_sinteticos.jsonl",
+        "checksum_sha256": "e015ead7b8869ba506d3d285c2ca4e497f86e88da46f5c44629e63238132767b",
+        "bytes": 31518,
+        "linhas_lidas": 30,
+        "documentos_aceitos": 30,
+        "descartes": {},
+        "observacao": "Registros clínicos FICTÍCIOS, escritos para este projeto. Não correspondem a paciente real e não contêm PII: sem nome, CPF, telefone, endereço ou data de nascimento."
+      }
+    }
+  },
+  "carga": {
+    "linhas_lidas": 15302,
+    "documentos_aceitos": 15206,
+    "descartes": {
+      "resposta com menos de 40 chars": 49,
+      "duplicata exata (mesma pergunta e mesma resposta)": 47
+    }
+  },
+  "indice": {
+    "chunks": 25271,
+    "colecao": "medical_kb_v1"
+  },
+  "configuracao": {
+    "modelo_embedding": "intfloat/multilingual-e5-base",
+    "limite_chars_chunk": 1200,
+    "overlap_chars": 120,
+    "colecao": "medical_kb_v1",
+    "assinatura": "343db04f86ee378a"
+  }
+}
