@@ -48,19 +48,17 @@ padrão de caráter informativo e registra cada interação em log para
 auditoria. Essa camada está implementada em [`src/governance/`](src/governance/README.md)
 (com apoio de `src/logging/`) — veja o README daquela pasta para detalhes.
 
+Para rodar a versão da inferência com guardrails (recomendada) em vez da
+inferência crua:
+
+```powershell
+.venv\Scripts\python.exe -m src.governance.inferencia_segura
+```
+
 ## Executando a inferência local
 
 Com o ambiente instalado e o adaptador extraído em `artifacts/adaptador_medquad_lora_final`:
 
 ```powershell
 .venv\Scripts\python.exe src\inferencia.py
-```
-
-Esse script roda a inferência "crua", sem guardrails. Como alternativa
-recomendada, existe [`src/governance/inferencia_segura.py`](src/governance/README.md),
-que aplica os guardrails de segurança e registra logs de auditoria a cada
-interação:
-
-```powershell
-.venv\Scripts\python.exe -m src.governance.inferencia_segura
 ```
