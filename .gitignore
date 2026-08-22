@@ -6,3 +6,13 @@ __pycache__/
 artifacts/
 unsloth_compiled_cache/
 /temp/
+
+# Base vetorial: reconstruível por scripts/build_vector_store.py, não versionada
+vectorstore/
+
+# Trilha de auditoria: contém a pergunta clínica e a resposta de cada interação.
+# Não é dado para versionar num assistente médico, mesmo em demo.
+logs/
+.pytest_cache/
+/.claude/
+/CLAUDE.md
