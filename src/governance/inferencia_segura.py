@@ -41,7 +41,7 @@ def carregar_modelo():
     FastLanguageModel.for_inference(_model)
     return _model, _tokenizer
 
-def gerar_resposta_segura(pergunta: str) -> str:
+def gerar_resposta_segura(pergunta: str, contexto: str = "") -> str:
     model, tokenizer = carregar_modelo()
     prompt = PROMPT_STYLE.format(
         "Responda à pergunta médica com base em informações clínicas confiáveis.",
@@ -60,7 +60,7 @@ def gerar_resposta_segura(pergunta: str) -> str:
         skip_special_tokens=True,
     ).strip()
 
-    resultado = aplicar_guardrail(resposta_bruta)
+    resultado = aplicar_guardrail(resposta_bruta, contexto)
     registrar_interacao(
         pergunta=pergunta,
         resposta_bruta=resposta_bruta,

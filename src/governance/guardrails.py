@@ -22,8 +22,17 @@ def contem_prescricao_direta(texto: str) -> bool:
     texto_lower = texto.lower()
     return any(re.search(p, texto_lower) for p in PADROES_PRESCRICAO)
 
-def aplicar_guardrail(resposta: str) -> dict:
-    bloqueado = contem_prescricao_direta(resposta)
+def _trecho_prescricao(texto: str) -> str | None:
+    texto_lower = texto.lower()
+    for p in PADROES_PRESCRICAO:
+        m = re.search(p, texto_lower)
+        if m:
+            return m.group(0)
+    return None
+
+def aplicar_guardrail(resposta: str, contexto: str = "") -> dict:
+    trecho = _trecho_prescricao(resposta)
+    bloqueado = trecho is not None and trecho not in contexto.lower()
     if bloqueado:
         resposta_final = (
             "Não posso fornecer instruções de dosagem ou prescrição direta. "
