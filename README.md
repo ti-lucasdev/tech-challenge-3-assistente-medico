@@ -75,7 +75,7 @@ isoladamente e não há nada que as encadeie numa execução só.
 |---|---|---|---|
 | 1. Fine-tuning da LLM | Integrante 1 (Lucas) | **Completa** | `notebooks/`, `src/inferencia.py`, `data/`, `scripts/export_medquad_dataset.py` |
 | 2. RAG e base vetorial | Integrante 2 | **Completa** | `src/rag/`, `scripts/build_vector_store.py`, `scripts/query_retriever.py`, `scripts/avaliar_retriever.py`, `tests/` |
-| 3. Orquestração LangGraph | Integrante 3 | **Não iniciada** | — (`langgraph` nem consta no `requirements.txt`) |
+| 3. Orquestração LangGraph | Integrante 3 | **Completa** | `src/orchestration/`, `scripts/chat.py`, `scripts/executar_assistente.py` |
 | 4. Governança e entrega | Integrante 4 | **Parcial** | `src/governance/`, `src/logging/` |
 
 Detalhamento do que falta em cada uma: [§8](#8-divisão-de-trabalho-e-status).
@@ -151,6 +151,8 @@ LLM: `verificar_ambiente.py --pular-llm` e `spike_rag_geracao.py --so-prompt`.
 | `scripts\spike_rag_geracao.py --comparar` | RAG + LLM ponta a ponta, com e sem LoRA | GPU ~6 GB + adaptador |
 | `src\inferencia.py` | Inferência crua com o adaptador | GPU ~6 GB + adaptador |
 | `python -m src.governance.inferencia_segura` | Inferência com guardrails e log | GPU ~6 GB + adaptador |
+| `scripts\chat.py` |	Chat interativo do assistente clínico | GPU ~6 GB + adaptador + base |
+| `scripts\executar_assistente.py "<pergunta>"` | Execução pontual do fluxo do assistente | GPU ~6 GB + adaptador + base |
 
 Todos precedidos de `.venv\Scripts\python.exe`. Ordem sugerida numa máquina nova:
 `verificar_ambiente.py` → `build_vector_store.py` → `pytest` → `spike_rag_geracao.py --so-prompt`.
@@ -631,97 +633,44 @@ sobre hipotireoidismo. É mais um argumento para o guardrail de citação
 
 ## 6. Camada 3: orquestração LangGraph (Integrante 3)
 
-**Status: não iniciada.** Não existe `StateGraph`, não existe nó de decisão, e `langgraph`
-não consta do `requirements.txt`. É a peça que falta para o sistema existir como um
-assistente, em vez de três componentes que funcionam isoladamente.
+**Status: Completa e Integrada.** A camada de orquestração foi implementada utilizando **LangGraph** (`StateGraph`), unificando o modelo fine-tuned (Camada 1), o motor RAG (Camada 2) e a governança (Camada 4) em um fluxo de decisão clínico determinístico e modular.
 
-### 6.1 O que precisa ser construído
+### 6.1 O que foi construído
 
-Conforme a divisão oficial de tarefas:
+Conforme a divisão oficial de tarefas, a orquestração entrega:
+- **Modelagem em Grafo (`StateGraph`):** Definida em `src/orchestration/workflow.py`, gerencia o ciclo de vida da consulta médica através de arestas condicionais e nós especializados.
+- **Definição Tipada de Estado (`EstadoClinico`):** Modelada em `src/orchestration/state.py` utilizando `TypedDict` para trafegar dados com segurança entre os nós.
+- **Nós Funcionais (`src/orchestration/nodes.py`):**
+  1. `no_identificar_paciente`: Extração flexível de IDs de pacientes (`PAC-XXXX` ou dígitos numéricos) via expressões regulares.
+  2. `no_recuperar_contexto`: Recuperação híbrida estruturada (prontuário filtrado por paciente + FAQ geral de literatura), incluindo filtro preventivo de escopo para abstenção em perguntas leigas ou irrelevantes.
+  3. `no_verificar_exames_e_alertas`: Varredura baseada em termos clínicos críticos (ex: *troponina*, *gasometria*, *tc*) para injeção automatizada de alertas direcionados à equipe de plantão.
+  4. `no_gerar_resposta`: Conexão direta com a LLM ajustada (Camada 1), utilizando prompts otimizados e parâmetros restritivos contra repetição (`repetition_penalty=1.2`, `no_repeat_ngram_size=3`).
+  5. `no_governanca_e_auditoria`: Aplicação de regras de compliance, verificação de evidências, inserção do aviso regulatório e registro em log de auditoria.
 
-- Modelagem do assistente como grafo direcionado (`StateGraph`) no LangGraph.
-- Nós funcionais para os fluxos automatizados: verificação de exames pendentes, sugestão de
-  conduta, alerta para a equipe médica.
-- **Integração de componentes:** conexão da LLM customizada (camada 1) com o motor RAG
-  (camada 2) dentro das cadeias orquestradas.
-- Definição tipada de estado (`State`) e diagrama do fluxo de decisão.
+### 6.2 Como executar a orquestração
 
-### 6.2 O contrato já disponível para consumir
-
-O nó de recuperação, na prática:
-
-```python
-def no_recuperacao(estado: EstadoClinico) -> EstadoClinico:
-    resultados = retriever.retrieve(estado.pergunta, k=4)
-
-    if not retriever.tem_evidencia_suficiente(resultados):
-        return estado.model_copy(update={
-            "contexto": "", "evidencia_suficiente": False, "fontes": [],
-        })
-
-    return estado.model_copy(update={
-        "contexto": retriever.format_context(resultados, max_tokens=1200),
-        "evidencia_suficiente": True,
-        "fontes": [r.citacao() for r in resultados],
-    })
-```
-
-O ramo de `evidencia_suficiente == False` deve levar a uma resposta de insuficiência de
-contexto, **não** à geração livre — é o requisito explícito de não improvisar sem suporte. E
-é o guardrail mais barato do sistema: se não há evidência, a LLM nem é chamada.
-
-**Recomendação: duas recuperações separadas, não uma.** Um `retrieve` sem filtro sobre
-"conduta para o diabetes descompensado do PAC-0002" mistura os dois corpora num top-k só, e
-quem decide a proporção é a similaridade, não o que a resposta precisa. Buscar o prontuário
-do paciente e a FAQ da condição em chamadas distintas, e concatenar os contextos, dá
-controle sobre quanto de cada coisa entra no prompt.
-
-Contrato completo em [§5.5](#55-interface-para-a-camada-3). Ressalva importante sobre
-abstenção no caminho do paciente em [§5.7](#57-avaliação-de-recuperação).
-
-### 6.3 O spike de integração
-
-`scripts/spike_rag_geracao.py` liga recuperação, prompt, adaptador e guardrail num processo
-só. **Não é o nó do LangGraph** — não tem grafo, estado nem roteamento. Existe para medir
-três hipóteses que sustentam o desenho das camadas 2 e 4 e que nunca tinham sido exercidas
-juntas.
+A camada 3 pode ser testada interativamente por meio da interface de terminal otimizada com feedback de etapas em tempo real:
 
 ```powershell
-# valida o orçamento de tokens; não carrega a LLM, roda sem GPU
-.venv\Scripts\python.exe scripts\spike_rag_geracao.py --so-prompt
+.venv\Scripts\python.exe scripts\chat.py
+```
+Ou através de execuções pontuais via linha de comando:
 
-# ponta a ponta, com o A/B que importa (exige GPU ~6 GB ou Colab)
-.venv\Scripts\python.exe scripts\spike_rag_geracao.py --comparar
-
-# contextualização por paciente
-.venv\Scripts\python.exe scripts\spike_rag_geracao.py --paciente PAC-0007 --so-prompt
+```PowerShell
+.venv\Scripts\python.exe scripts\executar_assistente.py "Qual é o diagnóstico do PAC-0001?"
 ```
 
-**1. O contexto cabe** — validado. Números reais do `--so-prompt`:
+### 6.3 O fluxo real executado e o contrato de RAG
+O sistema implementa o curto-circuito de abstenção planejado: se o retriever não encontrar suporte documental suficiente ou se a pergunta estiver fora do domínio médico, a flag evidencia_suficiente torna-se False, ignorando a chamada da LLM e retornando com segurança uma resposta padrão de insuficiência de contexto.
 
-| cenário | contexto | prompt total | folga (teto 1.798) |
-|---|---|---|---|
-| `k=4`, FAQ em inglês | 999 | 1.123 | 675 |
-| `k=1`, prontuário pt-BR | 417 | 546 | 1.252 |
+Durante a execução no chat interativo, o terminal exibe o rastreio das etapas de bastidores:
 
-**2. O adaptador usa o contexto, ou o ignora** — a medir numa GPU maior. O LoRA foi treinado
-com `input` = pergunta crua e `output` = resposta, isto é, para responder **de memória** — o
-oposto do que o RAG quer. Contexto no campo `Entrada` é fora da distribuição de treino dele.
-O `--comparar` gera duas vezes sob o mesmo prompt, com e sem o LoRA (via `disable_adapter` do
-PEFT, sem recarregar o modelo base), e compara a ancoragem lexical de cada resposta no
-contexto. **Se o modelo base for mais fiel ao contexto que o ajustado, isso é um achado do
-projeto, não um defeito** — é evidência de que RAG e fine-tuning resolvem problemas
-diferentes.
+ 1. `[Etapa 1/4] Identificando contexto e paciente...`
+ 2. `[Etapa 2/4] Consultando prontuário e base de conhecimento (RAG)...`
+ 3. `[Etapa 3/4] Analisando exames críticos e gerando resposta...`
+ 4. `[Etapa 4/4] Aplicando governança, guardrails e auditoria...`
 
-**3. A citação sobrevive** — a medir. O guardrail de citação recomendado à camada 4 exige que
-a resposta referencie uma `[FONTE n]` recuperada; só funciona se o marcador chegar à saída.
-
-**Consequência prática, qualquer que seja o resultado:** a instrução de RAG provavelmente não
-pode ser a de treino. Nas 1.001 amostras a `instruction` era constante, então o modelo teve
-pouco sinal para tratá-la como comando. O spike usa uma instrução explícita ("use somente as
-fontes fornecidas, cite [FONTE n]") e mede se ela pega.
-
----
+Entregando ao final a resposta clínica formatada, o aviso legal de caráter informativo e a listagem transparente das Fontes Consultadas (com links de proveniência ou URIs de prontuários sintéticos).
 
 ## 7. Camada 4: governança e auditoria (Integrante 4)
 

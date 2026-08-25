@@ -1,8 +1,8 @@
 {
-  "gerado_em": "2026-08-22",
+  "gerado_em": "2026-08-25",
   "corpus": {
     "versao": "medquad-pool-v1",
-    "atualizado_em": "2026-08-22",
+    "atualizado_em": "2026-08-25",
     "dataset_upstream": "mukulb/clustered_MEDQUAD_dataset_with_groups",
     "medquad_original": "https://github.com/abachaa/MedQuAD",
     "fontes": {
@@ -16,12 +16,12 @@
           "resposta com menos de 40 chars": 49,
           "duplicata exata (mesma pergunta e mesma resposta)": 47
         },
-        "observacao": "Somente linhas NÃO usadas no fine-tuning do Integrante 1. Ver data/README.md para o critério de exclusão (por texto da pergunta, não só por índice)."
+        "observacao": "Somente linhas NÃO usadas no fine-tuning do Integrante 1. Ver README.md §4.4 para o critério de exclusão (por texto da pergunta, não só por índice)."
       },
       "prontuarios_sinteticos": {
         "arquivo": "data/prontuarios_sinteticos.jsonl",
-        "checksum_sha256": "e015ead7b8869ba506d3d285c2ca4e497f86e88da46f5c44629e63238132767b",
-        "bytes": 31518,
+        "checksum_sha256": "c2686c11b3c3ec8edb3ba33949b8c69628c30190d04fb77b324c00b20db2e7cc",
+        "bytes": 31548,
         "linhas_lidas": 30,
         "documentos_aceitos": 30,
         "descartes": {},

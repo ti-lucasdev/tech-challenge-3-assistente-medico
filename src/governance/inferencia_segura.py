@@ -1,10 +1,10 @@
 """
 Wrapper de inferência com guardrails e logging (Parte 4).
 """
+from unsloth import FastLanguageModel
 from pathlib import Path
 import sys
 
-from unsloth import FastLanguageModel
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from src.governance.guardrails import aplicar_guardrail
