@@ -61,11 +61,14 @@ def gerar_resposta_segura(pergunta: str, contexto: str = "") -> str:
     ).strip()
 
     resultado = aplicar_guardrail(resposta_bruta, contexto)
+    # TODO: repassar as fontes recuperadas pelo RAG (Parte 3, src/orchestration/) assim que
+    # este wrapper passar a consumi-las de verdade, em vez de sempre None.
     registrar_interacao(
         pergunta=pergunta,
         resposta_bruta=resposta_bruta,
         resposta_final=resultado["resposta_final"],
         bloqueado=resultado["bloqueado"],
+        fontes=None,
     )
     return resultado["resposta_final"]
 
