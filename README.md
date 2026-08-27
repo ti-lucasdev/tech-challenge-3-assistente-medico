@@ -210,22 +210,6 @@ Formato Alpaca, com a `instruction` constante nas 1.001 amostras:
 
 ### Instrução:
 Responda à pergunta médica com base em informações clínicas confiáveis.
-## Segurança e governança (Parte 4)
-
-Sobre a inferência do modelo, existe uma camada de guardrails e logging que
-filtra respostas com indícios de dosagem/prescrição direta, anexa um aviso
-padrão de caráter informativo e registra cada interação em log para
-auditoria. Essa camada está implementada em [`src/governance/`](src/governance/README.md)
-(com apoio de `src/logging/`) — veja o README daquela pasta para detalhes.
-
-Para rodar a versão da inferência com guardrails (recomendada) em vez da
-inferência crua:
-
-```powershell
-.venv\Scripts\python.exe -m src.governance.inferencia_segura
-```
-
-## Executando a inferência local
 
 ### Entrada:
 {pergunta}
