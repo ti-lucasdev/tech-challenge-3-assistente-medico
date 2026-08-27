@@ -60,9 +60,9 @@ def gerar_resposta_segura(pergunta: str, contexto: str = "") -> str:
         skip_special_tokens=True,
     ).strip()
 
-    resultado = aplicar_guardrail(resposta_bruta, contexto)
-    # TODO: repassar as fontes recuperadas pelo RAG (Parte 3, src/orchestration/) assim que
-    # este wrapper passar a consumi-las de verdade, em vez de sempre None.
+    # TODO: repassar contexto/fontes recuperados pelo RAG (Parte 3, src/orchestration/) assim
+    # que este wrapper passar a consumi-los de verdade, em vez de sempre None.
+    resultado = aplicar_guardrail(resposta_bruta, contexto, fontes=None)
     registrar_interacao(
         pergunta=pergunta,
         resposta_bruta=resposta_bruta,
