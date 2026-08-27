@@ -53,6 +53,7 @@ langchain-core==1.6.0
 langchain-huggingface==1.2.2
 langchain-protocol==0.0.18
 langchain-text-splitters==1.1.2
+langgraph>=0.2.0
 langsmith==0.11.1
 markdown-it-py==4.2.0
 MarkupSafe==3.0.3

@@ -199,7 +199,8 @@ def no_governanca_e_auditoria(state: EstadoClinico) -> Dict[str, Any]:
 
     # Aplicação de guardrails de moderação caso a resposta passe sem bloqueio prévio
     if "⚠️" not in resposta_final:
-        resultado_guardrail = aplicar_guardrail(resposta_bruta)
+        contexto_recuperado = f"{state.get('contexto_prontuario', '')} {state.get('contexto_faq', '')}"
+        resultado_guardrail = aplicar_guardrail(resposta_bruta, contexto_recuperado)
         resposta_final = resultado_guardrail["resposta_final"]
         bloqueado = resultado_guardrail.get("bloqueado", False)
 
