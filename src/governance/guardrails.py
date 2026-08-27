@@ -18,11 +18,16 @@ MENSAGEM_SEM_CITACAO = (
 PADRAO_CITACAO_FONTE = r"\[FONTE\s*\d+\]"
 
 PADROES_PRESCRICAO = [
-    r"\d+\s*(-\s*\d+\s*)?\s*(mg|ml|mcg|g|iu|units?)\b",
+    r"\d+\s*(-\s*\d+\s*)?\s*(mg|ml|mcg|g|iu|units?|gotas?|ampolas?|comprimidos?|cp|c[aá]psulas?|colheres?)\b",
     r"\bdose\b.{0,30}\d",
     r"\btome\s+\d",
     r"\btake\s+\d",
     r"\badministre\s+\d",
+    r"\binjete\s+\d",
+    r"\baplique\s+\d",
+    r"\bingira\s+\d",
+    r"\bpingue\s+\d",
+    r"\bbeba\s+\d",
 ]
 
 def contem_prescricao_direta(texto: str) -> bool:
