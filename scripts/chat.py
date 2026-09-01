@@ -1,3 +1,7 @@
+import os
+import certifi
+os.environ["SSL_CERT_FILE"] = certifi.where()
+
 import sys
 from pathlib import Path
 
@@ -15,10 +19,9 @@ from transformers import logging as hf_logging
 # Define o nível de log para ERROR, silenciando warnings desnecessários
 hf_logging.set_verbosity_error()
 
-# Aviso visual prévio para o usuário saber que o carregamento na GPU está em andamento
-print("Inicializando o ambiente e carregando os pesos do modelo na GPU. Por favor, aguarde...")
+# Aviso visual prévio para o usuário saber que o sistema está carregando
+print("Inicializando o ambiente do Assistente Médico. Por favor, aguarde...")
 
-import unsloth
 from src.orchestration.workflow import app_assistente
 
 def iniciar_chat():
