@@ -41,13 +41,38 @@ def carregar_modelo():
     FastLanguageModel.for_inference(_model)
     return _model, _tokenizer
 
-def gerar_resposta_segura(pergunta: str, contexto: str = "") -> str:
-    model, tokenizer = carregar_modelo()
-    prompt = PROMPT_STYLE.format(
+def _montar_prompt(pergunta: str, contexto: str = "") -> str:
+    """
+    Monta o prompt de geração.
+
+    Com `contexto` não vazio, usa o MESMO formato do nó de geração da Camada 3
+    (`src/orchestration/nodes.py::no_gerar_resposta`) — instrução direta em português,
+    com o contexto recuperado pelo RAG embutido antes da pergunta. Esse formato é
+    replicado aqui de propósito (não importado de lá): os dois módulos são de
+    integrantes diferentes e evoluíram em paralelo. QUALQUER MUDANÇA de formato num
+    dos dois lugares deve ser replicada no outro, até que sejam unificados numa
+    função única de montagem de prompt (ver README, "Atenção de manutenção", §4.3).
+
+    Sem contexto (comportamento padrão, compatível com chamadas antigas), mantém o
+    PROMPT_STYLE original (formato Alpaca do fine-tuning), sem nenhuma mudança.
+    """
+    if contexto:
+        return (
+            f"Abaixo está um contexto clínico. Com base nele, responda à pergunta de forma direta, "
+            f"objetiva e em português. Não repita instruções.\n\n"
+            f"Contexto:\n{contexto}\n\n"
+            f"Pergunta: {pergunta}\n\n"
+            f"Resposta:"
+        )
+    return PROMPT_STYLE.format(
         "Responda à pergunta médica com base em informações clínicas confiáveis.",
         pergunta,
         "",
     )
+
+def gerar_resposta_segura(pergunta: str, contexto: str = "") -> str:
+    model, tokenizer = carregar_modelo()
+    prompt = _montar_prompt(pergunta, contexto)
     inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
     outputs = model.generate(
         **inputs,
